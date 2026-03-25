@@ -1,0 +1,36 @@
+# image will be published to ghcr.io/<user>/<name>
+name: ublue-thrashplay
+# description will be included in the image's metadata
+description: This is my (very) opinionated personal OS image, gaming style.
+
+# the base image to build on top of (FROM) and the version tag to use
+base-image: ghcr.io/ublue-os/bazzite-gnome-nvidia
+image-version: latest # latest is also supported if you want new updates ASAP
+
+stages:
+  - from-file: common-stages.yml
+
+# module configuration, executed in order
+# you can include multiple instances of the same module
+modules:
+  - type: files
+    files:
+      - source: system
+        destination: / # copies files/system/* (* means everything inside it) into your image's root folder /
+                       # put configuration files you want in /usr/etc/ inside the image
+                       # while putting files in /etc/ is done on booted system by system administrators.
+                       # read more about this in files module reference.
+
+  - from-file: common-user-rpms.yml
+
+  - from-file: common-manual-binaries.yml
+  - from-file: common-user-flatpaks.yml
+  - from-file: common-system-flatpaks.yml
+
+  - type: signing # this sets up the proper policy & signing files for signed images to work fully
+
+  - from-file: common-user-fonts.yml
+  - from-file: common-chezmoi.yml
+
+  - from-file: common-bazzite-user-rpms.yml
+  - from-file: common-bazzite-user-systemd.yml
