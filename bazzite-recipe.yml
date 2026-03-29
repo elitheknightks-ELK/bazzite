@@ -1,37 +1,58 @@
-name: bazzite-macos-edition
-description: Bazzite avec l'expérience visuelle complète de macOS (WhiteSur)
+# Nom de ton image (apparaîtra dans le terminal et les infos système)
+name: bazzite-macos
+description: Bazzite GNOME avec interface complète WhiteSur macOS
 
-# Base Bazzite avec support Nvidia (si tu as une carte Nvidia, sinon retire -nvidia)
+# Base officielle Bazzite (choisis avec ou sans -nvidia selon ta carte)
 base-image: ghcr.io/ublue-os/bazzite-gnome-nvidia
 image-version: latest
 
 modules:
-  # --- ÉTAPE 1 : INJECTER LES FICHIERS DU THÈME ---
+  # --- 1. INJECTION DES FICHIERS ---
+  # On va chercher tout ce que tu as mis dans system_files
   - type: files
     files:
-      - source: system
-        destination: / 
+      - source: system_files/desktop/silverblue
+        destination: /
+      - source: system_files/shared
+        destination: /
 
-  # --- ÉTAPE 2 : INSTALLER LES OUTILS DE PERSONNALISATION ---
+  # --- 2. INSTALLATION DES PAQUETS NÉCESSAIRES ---
   - type: rpm-ostree
     install:
-      - gnome-tweaks
-      - dconf-editor
-      - sassc
-      - nautilus-python # Utile pour certaines extensions de fichiers
+      - gnome-tweaks        # Pour ajuster les thèmes si besoin
+      - dconf-editor        # Pour les réglages avancés
+      - sassc               # Souvent requis pour le rendu des thèmes GTK
+      - nautilus-python     # Pour les extensions de fichiers à la Mac
 
-  # --- ÉTAPE 3 : FORCER LES RÉGLAGES MACOS (Boutons à gauche, thèmes) ---
+  # --- 3. CONFIGURATION AUTOMATIQUE (DCONF) ---
+  # C'est ici qu'on force les réglages sans que tu aies à le faire à la main
   - type: dconf
     settings:
+      # Boutons de fenêtre à GAUCHE (comme sur macOS)
       org.gnome.desktop.wm.preferences:
-        button-layout: "close,minimize,maximize:" # Boutons à GAUCHE comme sur Mac
+        button-layout: "close,minimize,maximize:"
+      
+      # Activation des thèmes WhiteSur
       org.gnome.desktop.interface:
         gtk-theme: "WhiteSur-Light"
         icon-theme: "WhiteSur"
         cursor-theme: "WhiteSur-cursors"
         font-name: "SF Pro Display 11"
+        document-font-name: "SF Pro Display 11"
+      
+      # Configuration de la barre supérieure (Apple Menu)
       org.gnome.shell.extensions.apple-menu:
         show-apple-icon: true
 
-  # --- ÉTAPE 4 : SIGNATURE ---
+  # --- 4. SCRIPTS DE POST-CONFIGURATION (SHELL) ---
+  - type: shell
+    commands:
+      # Force le thème WhiteSur pour l'écran de connexion GDM
+      - cp -rf /usr/share/themes/WhiteSur-Light/gnome-shell/* /usr/share/gnome-shell/theme/
+      
+      # Configuration du GRUB pour utiliser le thème WhiteSur
+      # On s'assure que le fichier /etc/default/grub pointe vers le bon dossier
+      - sed -i 's|^#GRUB_THEME=.*|GRUB_THEME="/usr/share/grub/themes/WhiteSur/theme.txt"|' /etc/default/grub
+
+  # --- 5. SIGNATURE DE L'IMAGE ---
   - type: signing
