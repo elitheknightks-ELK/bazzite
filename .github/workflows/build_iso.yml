@@ -23,8 +23,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+matrix:
         image_name:
-         matrix:
           - bazzite-macos
         major_version: [43]
     steps:
