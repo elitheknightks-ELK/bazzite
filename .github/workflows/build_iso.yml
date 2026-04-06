@@ -25,7 +25,6 @@ jobs:
       matrix:
         image_name:
          matrix:
-        image_name:
           - bazzite-macos
         major_version: [43]
     steps:
